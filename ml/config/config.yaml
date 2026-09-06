@@ -1,0 +1,84 @@
+seed: 42
+
+# Dataset: Dynahate v0.2.3
+dataset:
+  version: "0.2.3"
+  download_url: "https://raw.githubusercontent.com/bvidgen/Dynamically-Generated-Hate-Speech-Dataset/main/Dynamically%20Generated%20Hate%20Dataset%20v0.2.3.csv"
+  raw_csv_path: "Dataset/dynahate_v0.2.3.csv"
+  expected_sha256: "6e0aa7e598ab5b648cb1f0b48626a3e5f2e39a5abbd9fee998efa5a0b6cab4ca"
+  verify_checksum: true
+
+  text_column: "text"
+  label_column: "label"
+  split_column: "split"
+
+  label_map:
+    nothate: 0
+    hate: 1
+
+  split_map:
+    train: ["train"]
+    validation: ["dev", "val", "validation"]
+    test: ["test"]
+
+# Preprocessing / tokenization
+preprocessing:
+  vocab_size: 20000
+  max_len: 64
+  lowercase: true
+
+# Model (encoder + head)
+model:
+  encoder_type: "mobilebert"
+
+  # CNN encoder
+  embedding_dim: 128
+  conv_filters: 128
+  conv_kernel_size: 5
+
+  # classification head
+  head_hidden_units: 64
+  dropout: 0.3
+
+  # --- MobileBERT encoder
+  mobilebert:
+    hf_model_name: "google/mobilebert-uncased"
+    seq_len: 64
+    fine_tune_encoder: true
+    encoder_lr: 2.0e-5
+    epochs: 10
+    weight_decay: 0.01
+    # Head-only training
+    head_lr: 0.001
+    head_epochs: 20
+
+# Training
+training:
+  batch_size: 32
+  epochs: 20
+  learning_rate: 0.001
+  early_stopping_patience: 3
+  use_class_weights: true
+
+# Output locations
+paths:
+  processed_data_dir: "ml/outputs/data"
+  vectorizer_dir: "ml/outputs/vectorizer"
+  models_dir: "ml/outputs/models"
+  metrics_dir: "ml/outputs/metrics"
+  exported_dir: "exported_models"
+
+# TFLite export for Android
+export:
+  variants: ["float32", "dynamic_range", "float16"]
+  representative_samples: 200
+
+# Benchmark: model size + inference latency
+benchmark:
+  num_runs: 50
+  warmup_runs: 10
+
+# on-device training (frozen encoder + trainable head)
+ondevice:
+  learning_rate: 0.02          
+  encoder_variant: "dynamic_range"
